@@ -46,9 +46,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -102,6 +104,10 @@ fun MyApp() {
                     .size(50.dp)
                     .align(Alignment.CenterHorizontally))
 
+                4 -> NumberFour(expanded = expanded, modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.CenterHorizontally)
+                )
                 else -> {}
             }
 
@@ -308,7 +314,70 @@ private fun NumberThree(
     }
 }
 
+@Composable
+private fun NumberFour(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
 
+    val value = remember { Animatable(0f) }
+    val value2 = remember { Animatable(0f) }
+    val value3 = remember { Animatable(-10f) }
+
+    val path = Path()
+    path.moveTo(value.value,90f)
+    path.lineTo(value.value, 0f)
+    path.moveTo(value.value,0f)
+    path.lineTo(0f,value2.value)
+    path.moveTo(0f,value2.value)
+    path.lineTo(value2.value, value2.value)
+
+    val path2 = Path()
+    path2.moveTo(value3.value,-5f)
+    path2.lineTo(50f,-5f)
+    path2.moveTo(value3.value,0f)
+    path2.lineTo(value3.value,90f)
+
+    LaunchedEffect(expanded){
+        launch {
+            value.animateTo(
+                targetValue = if(expanded) 45f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value2.animateTo(
+                targetValue = if(expanded) 65f else 0f,
+                animationSpec = animSpec
+            )
+        }
+
+        launch {
+            value3.animateTo(
+                targetValue = if(expanded) -5f else -10f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+        drawPath(
+            path = path2,
+            color = Color.White,
+            style = Stroke(10f)
+        )
+    }
+}
 
 const val ANIMATION_DURATION = 500
 
