@@ -27,6 +27,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -144,25 +145,18 @@ private fun Number(
     expanded: Boolean,
     modifier: Modifier = Modifier
 ){
-    when(number){
-        1 -> NumberOne(expanded = expanded, modifier = modifier
-            .size(50.dp))
-
-        2 -> NumberTwo(expanded = expanded, modifier = Modifier
-            .size(50.dp))
-
-        3 -> NumberThree(expanded = expanded, modifier = Modifier
-            .size(50.dp))
-
-        4 -> NumberFour(expanded = expanded, modifier = Modifier
-            .size(50.dp))
-        5 -> NumberFive(expanded = expanded, modifier = Modifier
-            .size(50.dp))
-
-        6 -> NumberSix(expanded = expanded, modifier = Modifier
-            .size(50.dp))
-        else -> {}
-    }
+   Box(modifier.size(70.dp)) {
+       when(number){
+           1 -> NumberOne(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           2 -> NumberTwo(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           3 -> NumberThree(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           4 -> NumberFour(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           5 -> NumberFive(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           6 -> NumberSix(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           7 -> NumberSeven(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           else -> {}
+       }
+   }
 }
 
 @Composable
@@ -513,6 +507,44 @@ private fun NumberSix(
         launch {
             value2.animateTo(
                 targetValue = if(expanded) 90f else 0f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+    }
+}
+
+@Composable
+private fun NumberSeven(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
+
+    val value = remember { Animatable(0f) }
+
+    val path = Path()
+
+    path.moveTo(0f,0f)
+    path.lineTo(value.value, 0f)
+    path.moveTo((value.value-5f).coerceAtLeast(0f), 2.5f)
+    path.lineTo(0f, 90f)
+
+    LaunchedEffect(expanded){
+        launch {
+            value.animateTo(
+                targetValue = if(expanded) 55f else 0f,
                 animationSpec = animSpec
             )
         }
