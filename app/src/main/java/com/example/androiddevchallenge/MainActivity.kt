@@ -155,6 +155,7 @@ private fun Number(
            6 -> NumberSix(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            7 -> NumberSeven(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            8 -> NumberEight(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           9 -> NumberNine(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            else -> {}
        }
    }
@@ -630,6 +631,61 @@ private fun NumberEight(
         )
         drawPath(
             path = path2,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+    }
+}
+
+@Composable
+private fun NumberNine(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
+
+    val value = remember { Animatable(0f) }
+    val value2 = remember { Animatable(0f) }
+    val value3 = remember { Animatable(22.5f) }
+
+    val path = Path()
+
+    path.moveTo(0f,90f)
+    path.lineTo(0f,value2.value)
+    path.moveTo(0f,0f)
+    path.addArc(Rect(0f, 00f, 45f, 45f), 180f, value.value)
+    path.moveTo(45f, 22.5f)
+    path.lineTo(45f, value3.value)
+    path.addArc(Rect(-45f, 0f, 45f, 90f), 360f, value2.value)
+
+    LaunchedEffect(expanded){
+        launch {
+            value.animateTo(
+                targetValue = if(expanded) 360f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value2.animateTo(
+                targetValue = if(expanded) 90f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value3.animateTo(
+                targetValue = if(expanded) 50f else 22.5f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
             color = Color.Red,
             style = Stroke(10f)
         )
