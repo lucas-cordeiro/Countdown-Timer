@@ -23,11 +23,21 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.TargetBasedAnimation
 import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.animateValueAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -40,11 +50,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,9 +76,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.exp
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +95,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-val LongToVector: TwoWayConverter<Long, AnimationVector1D> = TwoWayConverter({ AnimationVector1D(it.toFloat()) }, { it.value.toLong() })
+val IntToVector: TwoWayConverter<Int, AnimationVector1D> = TwoWayConverter({ AnimationVector1D(it.toFloat()) }, { it.value.roundToInt() })
 
 val time = 2 * 60 * 1000L
 
@@ -87,120 +104,162 @@ val time = 2 * 60 * 1000L
 @Composable
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
+       Row() {
+           TimerMinuteUnit(
+               initialNumber = 2,
+               count = 1,
+           )
+           TimerSecondsTen(
+               initialNumber = 0,
+               count = 11
+           )
+           TimerSecondsUnit(
+               initialNumber = 0,
+               count = 119
+           )
+       }
+    }
+}
 
-        var play by remember { mutableStateOf(false) }
+@Composable
+private fun TimerSecondsUnit(
+    initialNumber: Int,
+    count: Int,
+    modifier: Modifier = Modifier,
+){
+    val seconds: MutableStateFlow<Int> = MutableStateFlow(count)
 
-        val timeAnimated: Int by animateIntAsState(
-            targetValue = if (play) 0 else time.toInt(),
-            animationSpec = tween(
-                durationMillis = time.toInt()
-            )
-        )
+    var number by remember { mutableStateOf(initialNumber) }
+    var expanded by remember { mutableStateOf(true) }
 
-        val cal = remember(timeAnimated){
-            Calendar.getInstance().apply {
-                timeInMillis = timeAnimated.toLong()
+    LaunchedEffect(initialNumber) {
+        launch {
+            animate(
+                animationSpec = keyframes {
+                    durationMillis = 1000 * count
+                },
+                typeConverter = Int.VectorConverter,
+                initialValue = 0,
+                targetValue = count
+            ) { value, velocity ->
+                seconds.value = value
             }
         }
 
-        val minute = remember(cal.get(Calendar.MINUTE)){
-            cal.get(Calendar.MINUTE)
+        seconds.collect {
+            var tempNumber = number - 1
+            if(tempNumber<0){
+                tempNumber = 9
+            }
+            launch {
+                expanded = false
+                delay(ANIMATION_DURATION.toLong())
+                number = tempNumber
+                expanded = true
+                Log.d("BUG", "Timer: $it Number: $number")
+            }
         }
-        var minuteExpanded by remember{ mutableStateOf(true) }
-
-        val (secondTen, secondUnit) = remember(cal.get(Calendar.SECOND)){
-            val seconds = cal.get(Calendar.SECOND).toString().padStart(2,'0')
-            Pair(seconds[0].toString().toInt(),seconds[1].toString().toInt())
-        }
-        var secondTenExpanded by remember{ mutableStateOf(true) }
-        var secondUnitExpanded by remember{ mutableStateOf(true) }
-
-        LaunchedEffect(Unit){
-            play = true
-        }
-
-        LaunchedEffect(minute){
-            minuteExpanded = false
-            delay(ANIMATION_DURATION.toLong() + 100)
-            minuteExpanded = true
-        }
-        LaunchedEffect(secondTen){
-            secondTenExpanded = false
-            delay(ANIMATION_DURATION.toLong() + 100)
-            secondTenExpanded = true
-        }
-        LaunchedEffect(secondUnit){
-            secondUnitExpanded = false
-            delay(ANIMATION_DURATION.toLong() + 100)
-            secondUnitExpanded = true
-        }
-        
-        Row() {
-            Number(number = minute, expanded = minuteExpanded)
-            Number(number = secondTen, expanded = secondTenExpanded)
-            Number(number = secondUnit, expanded = secondUnitExpanded)
-        }
-
-        // var expanded by remember{ mutableStateOf(true) }
-        // var number by remember{ mutableStateOf(1) }
-        //
-        // val scope = rememberCoroutineScope()
-        //
-        // Column() {
-        //     Text(
-        //         text = "Ready... Set... GO!",
-        //         style = MaterialTheme.typography.body1.copy(
-        //             fontWeight = FontWeight.Bold
-        //         ),
-        //         modifier = Modifier
-        //             .padding(top = 10.dp, start = 100.dp)
-        //     )
-        //
-        //     Row(Modifier.align(Alignment.CenterHorizontally)) {
-        //         Number(
-        //             number = number-1,
-        //             expanded = expanded,
-        //             modifier = Modifier.align(Alignment.CenterVertically)
-        //         )
-        //         Number(
-        //             number = number,
-        //             expanded = expanded,
-        //             modifier = Modifier.align(Alignment.CenterVertically)
-        //         )
-        //         Number(
-        //             number = number+1,
-        //             expanded = expanded,
-        //             modifier = Modifier.align(Alignment.CenterVertically)
-        //         )
-        //     }
-        //
-        //    Row() {
-        //        Button(onClick = {
-        //            scope.launch {
-        //                expanded = false
-        //                delay(ANIMATION_DURATION.toLong())
-        //                number -= 1
-        //                delay(ANIMATION_DURATION.toLong())
-        //                expanded = true
-        //            }
-        //        }) {
-        //            Text(text = "-")
-        //        }
-        //
-        //        Button(onClick = {
-        //           scope.launch {
-        //               expanded = false
-        //               delay(ANIMATION_DURATION.toLong())
-        //               number += 1
-        //               delay(ANIMATION_DURATION.toLong())
-        //               expanded = true
-        //           }
-        //        }) {
-        //            Text(text = "+")
-        //        }
-        //    }
-        // }
     }
+
+    Number(
+        number = number,
+        expanded = expanded,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun TimerSecondsTen(
+    initialNumber: Int,
+    count: Int,
+    modifier: Modifier = Modifier,
+){
+    val seconds: MutableStateFlow<Int> = MutableStateFlow(count)
+
+    var number by remember { mutableStateOf(initialNumber) }
+    var expanded by remember { mutableStateOf(true) }
+
+    LaunchedEffect(initialNumber) {
+        launch {
+            animate(
+                animationSpec = keyframes {
+                    durationMillis = 1000 * 10 * count
+                },
+                typeConverter = Int.VectorConverter,
+                initialValue = 0,
+                targetValue = count
+            ) { value, velocity ->
+                seconds.value = value
+            }
+        }
+
+        seconds.collect {
+            var tempNumber = number - 1
+            if(tempNumber<0){
+                tempNumber = 5
+            }
+            launch {
+                expanded = false
+                delay(ANIMATION_DURATION.toLong())
+                number = tempNumber
+                expanded = true
+                Log.d("BUG", "Timer: $it Number: $number")
+            }
+        }
+    }
+
+    Number(
+        number = number,
+        expanded = expanded,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun TimerMinuteUnit(
+    initialNumber: Int,
+    count: Int,
+    modifier: Modifier = Modifier,
+){
+    val seconds: MutableStateFlow<Int> = MutableStateFlow(count)
+
+    var number by remember { mutableStateOf(initialNumber) }
+    var expanded by remember { mutableStateOf(true) }
+
+    LaunchedEffect(initialNumber) {
+        launch {
+            animate(
+                animationSpec = keyframes {
+                    durationMillis = 1000 * 60 * count
+                },
+                typeConverter = Int.VectorConverter,
+                initialValue = 0,
+                targetValue = count
+            ) { value, velocity ->
+                seconds.value = value
+            }
+        }
+
+        seconds.collect {
+            var tempNumber = number - 1
+            if(tempNumber<0){
+                tempNumber = 9
+            }
+            launch {
+                expanded = false
+                delay(ANIMATION_DURATION.toLong())
+                number = tempNumber
+                expanded = true
+                Log.d("BUG", "Timer: $it Number: $number")
+            }
+        }
+    }
+
+    Number(
+        number = number,
+        expanded = expanded,
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -837,7 +896,7 @@ private fun NumberZero(
     }
 }
 
-const val ANIMATION_DURATION = 200
+const val ANIMATION_DURATION = 300
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
