@@ -78,7 +78,7 @@ fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
 
         var expanded by remember{ mutableStateOf(true) }
-        var number by remember{ mutableStateOf(2) }
+        var number by remember{ mutableStateOf(1) }
 
         val scope = rememberCoroutineScope()
 
@@ -147,6 +147,7 @@ private fun Number(
 ){
    Box(modifier.size(70.dp)) {
        when(number){
+           0 -> NumberZero(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            1 -> NumberOne(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            2 -> NumberTwo(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            3 -> NumberThree(expanded = expanded, modifier = Modifier.align(Alignment.Center))
@@ -657,10 +658,10 @@ private fun NumberNine(
     path.moveTo(0f,90f)
     path.lineTo(0f,value2.value)
     path.moveTo(0f,0f)
-    path.addArc(Rect(0f, 00f, 45f, 45f), 180f, value.value)
+    path.addArc(Rect(0f, 0f, 45f, 45f), 180f, value.value)
     path.moveTo(45f, 22.5f)
     path.lineTo(45f, value3.value)
-    path.addArc(Rect(-45f, 0f, 45f, 90f), 360f, value2.value)
+    path.addArc(Rect(-45f, 0f, 45f, 90f), 0f, value2.value)
 
     LaunchedEffect(expanded){
         launch {
@@ -686,6 +687,86 @@ private fun NumberNine(
     Canvas(modifier = modifier) {
         drawPath(
             path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+    }
+}
+
+@Composable
+private fun NumberZero(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
+
+    val value = remember { Animatable(0f) }
+    val value2 = remember { Animatable(22.5f) }
+    val value3 = remember { Animatable(0f) }
+
+    val path = Path()
+    path.moveTo(0f,22.5f)
+    path.addArc(Rect(0f, 0f, 45f, 45f), 180f, value.value)
+
+    val path2 = Path()
+    path2.moveTo(0f,67.5f)
+    path2.addArc(Rect(0f, 45f, 45f, 90f), 180-value.value, value.value)
+
+    val path3 = Path()
+    path3.moveTo(45f,22.5f)
+    path3.lineTo(45f,value2.value)
+
+    val path4 = Path()
+    path4.moveTo(0f,22.5f)
+    path4.lineTo(0f,67.5f)
+    path4.moveTo(0f,22.5f)
+    path4.lineTo(0f,value3.value)
+    path4.moveTo(0f,67.5f)
+    path4.lineTo(0f,90f - value3.value)
+
+    LaunchedEffect(expanded) {
+        launch {
+            value.animateTo(
+                targetValue = if (expanded) 180f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value2.animateTo(
+                targetValue = if (expanded) 67.5f else 22.5f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value3.animateTo(
+                targetValue = if (expanded) 22.5f else 0f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+        drawPath(
+            path = path2,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+        drawPath(
+            path = path3,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+        drawPath(
+            path = path4,
             color = Color.Red,
             style = Stroke(10f)
         )
