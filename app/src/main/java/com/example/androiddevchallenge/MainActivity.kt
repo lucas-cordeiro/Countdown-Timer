@@ -77,7 +77,7 @@ fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
 
         var expanded by remember{ mutableStateOf(true) }
-        var number by remember{ mutableStateOf(1) }
+        var number by remember{ mutableStateOf(2) }
 
         val scope = rememberCoroutineScope()
 
@@ -91,27 +91,22 @@ fun MyApp() {
                     .padding(top = 10.dp, start = 100.dp)
             )
 
-            when(number){
-                1 -> NumberOne(expanded = expanded, modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally))
-
-                2 -> NumberTwo(expanded = expanded, modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally))
-
-                3 -> NumberThree(expanded = expanded, modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally))
-
-                4 -> NumberFour(expanded = expanded, modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally)
+            Row(Modifier.align(Alignment.CenterHorizontally)) {
+                Number(
+                    number = number-1,
+                    expanded = expanded,
+                    modifier = Modifier.align(Alignment.CenterVertically)
                 )
-                5 -> NumberFive(expanded = expanded, modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally))
-                else -> {}
+                Number(
+                    number = number,
+                    expanded = expanded,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Number(
+                    number = number+1,
+                    expanded = expanded,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
 
            Row() {
@@ -140,6 +135,33 @@ fun MyApp() {
                }
            }
         }
+    }
+}
+
+@Composable
+private fun Number(
+    number: Int,
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    when(number){
+        1 -> NumberOne(expanded = expanded, modifier = modifier
+            .size(50.dp))
+
+        2 -> NumberTwo(expanded = expanded, modifier = Modifier
+            .size(50.dp))
+
+        3 -> NumberThree(expanded = expanded, modifier = Modifier
+            .size(50.dp))
+
+        4 -> NumberFour(expanded = expanded, modifier = Modifier
+            .size(50.dp))
+        5 -> NumberFive(expanded = expanded, modifier = Modifier
+            .size(50.dp))
+
+        6 -> NumberSix(expanded = expanded, modifier = Modifier
+            .size(50.dp))
+        else -> {}
     }
 }
 
@@ -406,11 +428,11 @@ private fun NumberFive(
     path.moveTo(0f,5f)
     path.lineTo(value2.value, 5f)
 
-    path.moveTo(-5f,35f)
-    path.lineTo(value3.value, 35f)
+    path.moveTo(-5f,40f)
+    path.lineTo(value3.value, 40f)
 
-    path.moveTo(22.5f,35f)
-    path.addArc(Rect(0f, 35f, 45f, 85f), 270f, value4.value)
+    path.moveTo(22.5f,40f)
+    path.addArc(Rect(0f, 40f, 45f, 85f), 270f, value4.value)
 
     path.moveTo(value3.value,85f)
     path.lineTo(-5f,85f)
@@ -443,6 +465,54 @@ private fun NumberFive(
         launch {
             value5.animateTo(
                 targetValue = if(expanded) 45f else 90f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+    }
+}
+
+@Composable
+private fun NumberSix(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
+
+    val value = remember { Animatable(0f) }
+    val value2 = remember { Animatable(0f) }
+
+    val path = Path()
+
+    path.moveTo(0f,90f)
+    path.lineTo(0f,value2.value)
+    path.moveTo(0f,40f)
+    path.addArc(Rect(0f, 40f, 45f, 90f), 180f, value.value)
+    path.moveTo(0f, 67.5f)
+    path.lineTo(0f, 40f)
+    path.addArc(Rect(0f, 0f, 90f, 90f), 180f, value2.value)
+
+    LaunchedEffect(expanded){
+        launch {
+            value.animateTo(
+                targetValue = if(expanded) 360f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value2.animateTo(
+                targetValue = if(expanded) 90f else 0f,
                 animationSpec = animSpec
             )
         }
