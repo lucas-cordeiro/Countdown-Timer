@@ -154,6 +154,7 @@ private fun Number(
            5 -> NumberFive(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            6 -> NumberSix(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            7 -> NumberSeven(expanded = expanded, modifier = Modifier.align(Alignment.Center))
+           8 -> NumberEight(expanded = expanded, modifier = Modifier.align(Alignment.Center))
            else -> {}
        }
    }
@@ -553,6 +554,82 @@ private fun NumberSeven(
     Canvas(modifier = modifier) {
         drawPath(
             path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+    }
+}
+
+
+@Composable
+private fun NumberEight(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val duration = remember{ (ANIMATION_DURATION / 3)*2 }
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = duration,
+        )
+    }
+
+    val duration2 = remember{ (ANIMATION_DURATION / 3) }
+    val animSpec2: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = duration2,
+        )
+    }
+
+    val value = remember { Animatable(0f) }
+    val value2 = remember { Animatable(0f) }
+    val value3 = remember { Animatable(90f) }
+
+    val path = Path()
+    path.addArc(Rect(0f, 0f, 45f, 45f), 90f, value.value)
+    path.addArc(Rect(0f, 45f, 45f, 90f), 270f, value.value)
+
+    val path2 = Path()
+    path2.moveTo(value2.value,45f)
+    path2.lineTo(value2.value,90 - value3.value)
+
+    path2.moveTo(value2.value,45f)
+    path2.lineTo(value2.value,value3.value)
+
+    LaunchedEffect(expanded) {
+        launch {
+            if(!expanded)
+                delay(duration.toLong())
+            value2.animateTo(
+                targetValue = if (expanded) 22.5f else 0f,
+                animationSpec = animSpec2
+            )
+        }
+        launch {
+            if(!expanded)
+                delay(duration.toLong())
+            value3.animateTo(
+                targetValue = if (expanded) 45f else 90f,
+                animationSpec = animSpec2
+            )
+        }
+        launch {
+            if(expanded)
+                delay(duration2.toLong())
+            value.animateTo(
+                targetValue = if (expanded) 360f else 0f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
+            style = Stroke(10f)
+        )
+        drawPath(
+            path = path2,
             color = Color.Red,
             style = Stroke(10f)
         )
