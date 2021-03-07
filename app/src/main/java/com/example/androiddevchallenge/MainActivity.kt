@@ -108,6 +108,9 @@ fun MyApp() {
                     .size(50.dp)
                     .align(Alignment.CenterHorizontally)
                 )
+                5 -> NumberFive(expanded = expanded, modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.CenterHorizontally))
                 else -> {}
             }
 
@@ -374,6 +377,81 @@ private fun NumberFour(
         drawPath(
             path = path2,
             color = Color.White,
+            style = Stroke(10f)
+        )
+    }
+}
+
+@Composable
+private fun NumberFive(
+    expanded: Boolean,
+    modifier: Modifier = Modifier
+){
+    val animSpec: AnimationSpec<Float> = remember {
+        tween(
+            durationMillis = ANIMATION_DURATION,
+        )
+    }
+
+    val value = remember { Animatable(90f) }
+    val value2 = remember { Animatable(0f) }
+    val value3 = remember { Animatable(0f) }
+    val value4 = remember { Animatable(0f) }
+    val value5 = remember { Animatable(90f) }
+
+    val path = Path()
+
+    path.lineTo(0f, value.value)
+
+    path.moveTo(0f,5f)
+    path.lineTo(value2.value, 5f)
+
+    path.moveTo(-5f,35f)
+    path.lineTo(value3.value, 35f)
+
+    path.moveTo(22.5f,35f)
+    path.addArc(Rect(0f, 35f, 45f, 85f), 270f, value4.value)
+
+    path.moveTo(value3.value,85f)
+    path.lineTo(-5f,85f)
+
+    LaunchedEffect(expanded){
+        launch {
+            value.animateTo(
+                targetValue = if(expanded) 35f else 90f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value2.animateTo(
+                targetValue = if(expanded) 45f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value3.animateTo(
+                targetValue = if(expanded) 22.5f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value4.animateTo(
+                targetValue = if(expanded) 180f else 0f,
+                animationSpec = animSpec
+            )
+        }
+        launch {
+            value5.animateTo(
+                targetValue = if(expanded) 45f else 90f,
+                animationSpec = animSpec
+            )
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        drawPath(
+            path = path,
+            color = Color.Red,
             style = Stroke(10f)
         )
     }
